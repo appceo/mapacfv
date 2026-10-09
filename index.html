@@ -9,7 +9,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <!-- Leaflet CSS (Mapa Interactivo) -->
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <!-- SheetJS para lectura de CSV / Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -45,7 +45,7 @@
       z-index: 1000;
     }
 
-    /* PANEL DE ADMINISTRACIÓN / CARGA */
+    /* PANEL DE CARGA Y ADMINISTRACIÓN */
     #adminBanner {
       background: #edf2f7;
       border-bottom: 2px solid #cbd5e0;
@@ -53,7 +53,7 @@
       z-index: 999;
     }
 
-    /* CONTENEDOR MAPA + SIDEBAR */
+    /* CONTENEDOR PRINCIPAL */
     .app-body {
       display: flex;
       flex: 1;
@@ -61,7 +61,7 @@
       overflow: hidden;
     }
 
-    /* PANEL LATERAL DE BÚSQUEDA Y LISTA */
+    /* SIDEBAR LISTA DE GRUPOS */
     #sidebar {
       width: 360px;
       background: white;
@@ -85,14 +85,13 @@
       padding: 0.8rem;
     }
 
-    /* MAPA LEAFLET */
     #map {
       flex: 1;
       height: 100%;
       width: 100%;
     }
 
-    /* TARJETAS EN SIDEBAR */
+    /* TARJETAS SIDEBAR */
     .group-item-card {
       border: 1px solid #e2e8f0;
       border-left: 4px solid var(--accent-color);
@@ -110,7 +109,7 @@
       transform: translateX(2px);
     }
 
-    /* CASITAS 🏠 EN EL MAPA */
+    /* CASITAS 🏠 */
     .house-pin {
       background-color: #2b6cb0;
       border: 2px solid #ffffff;
@@ -132,7 +131,7 @@
       z-index: 1000 !important;
     }
 
-    /* TARJETA POPUP EMERGENTE (SIN TELÉFONO) */
+    /* POPUPS EN MAPA (SIN TELÉFONOS) */
     .leaflet-popup-content-wrapper {
       border-radius: 10px;
       padding: 0;
@@ -199,7 +198,7 @@
 
   <div class="app-container">
 
-    <!-- ENCABEZADO PRINCIPAL -->
+    <!-- ENCABEZADO -->
     <header class="app-header d-flex justify-content-between align-items-center">
       <div class="d-flex align-items-center">
         <i class="bi bi-geo-alt-fill fs-3 me-2 text-warning"></i>
@@ -210,17 +209,17 @@
       </div>
     </header>
 
-    <!-- PANEL DE ADMINISTRACIÓN / CARGA DE ARCHIVO (SE OCULTA EN MODO PÚBLICO) -->
+    <!-- PANEL DE ADMINISTRACIÓN / CARGA DE ARCHIVO -->
     <div id="adminBanner">
       <div class="row align-items-center g-2">
         <div class="col-md-6">
-          <label class="form-label fw-bold mb-1 small text-primary"><i class="bi bi-file-earmark-excel me-1"></i> Cargar / Actualizar Archivo de Datos (CSV o Excel):</label>
+          <label class="form-label fw-bold mb-1 small text-primary"><i class="bi bi-file-earmark-excel me-1"></i> Cargar Archivo de Datos (CSV o Excel):</label>
           <input type="file" id="fileInput" class="form-control form-control-sm" accept=".csv, .xlsx, .xls" onchange="procesarArchivoCargado(event)">
         </div>
         <div class="col-md-6 d-flex flex-column justify-content-end align-items-md-end">
           <span class="small fw-semibold text-secondary mb-1">Enlace Público Limpio para Compartir:</span>
           <div class="d-flex gap-2 w-100 justify-content-md-end">
-            <input type="text" id="publicLinkInput" class="form-control form-control-sm readonly" style="max-width: 320px;" readonly>
+            <input type="text" id="publicLinkInput" class="form-control form-control-sm" style="max-width: 340px;" readonly placeholder="Cargue su archivo arriba...">
             <button type="button" class="btn btn-sm btn-primary fw-bold text-nowrap" onclick="copiarEnlacePublico()">
               <i class="bi bi-link-45deg me-1"></i> Copiar Enlace
             </button>
@@ -259,23 +258,20 @@
         <div class="sidebar-content" id="groupList"></div>
       </div>
 
-      <!-- BOTÓN COLAPSAR SIDEBAR -->
       <button class="toggle-sidebar-btn" onclick="toggleSidebar()" title="Ocultar/Mostrar Lista">
         <i class="bi bi-list fs-5"></i>
       </button>
 
-      <!-- CONTENEDOR DEL MAPA -->
       <div id="map"></div>
 
     </div>
 
   </div>
 
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    const STORAGE_KEY = 'cfv_mapa_db_v10';
+    const STORAGE_KEY = 'cfv_mapa_db_v12';
     let map = null;
     let markersLayer = null;
     let rawData = [];
@@ -288,16 +284,12 @@
 
     const puntosSedes = {
       '127': [4.7118, -74.0543],
-      'igleco 127': [4.7118, -74.0543],
       '76': [4.6653, -74.0655],
-      'igleco 76': [4.6653, -74.0655],
       'chía': [4.8625, -74.0530],
       'chia': [4.8625, -74.0530],
       'banderas': [4.6315, -74.1480],
       'cedritos': [4.7240, -74.0320],
       'mazuren': [4.7330, -74.0510],
-      'mazurén': [4.7330, -74.0510],
-      'alhambra': [4.6970, -74.0610],
       'prado veraniego': [4.7110, -74.0540],
       'suba': [4.7400, -74.0830],
       'usaquén': [4.6960, -74.0300],
@@ -310,8 +302,12 @@
       'kennedy': [4.6250, -74.1500],
       'fontibón': [4.6750, -74.1400],
       'soacha': [4.5800, -74.2200],
-      'zipaquirá': [5.0250, -74.0000],
-      'ibagué': [4.4389, -75.2322]
+      'cajicá': [4.9180, -74.0280],
+      'cajica': [4.9180, -74.0280],
+      'tocancipá': [4.9650, -73.9120],
+      'tocancipa': [4.9650, -73.9120],
+      'ibagué': [4.4389, -75.2322],
+      'ibague': [4.4389, -75.2322]
     };
 
     window.onload = function() {
@@ -327,6 +323,7 @@
         attribution: '&copy; OpenStreetMap'
       }).addTo(map);
       markersLayer = L.layerGroup().addTo(map);
+      setTimeout(() => map.invalidateSize(), 300);
     }
 
     function renderCheckboxes() {
@@ -366,28 +363,27 @@
       if (guardado) {
         try {
           rawData = JSON.parse(guardado);
-          if (status) status.innerText = `✓ Se cargaron ${rawData.length} registros desde la memoria local.`;
+          if (status) status.innerText = `✓ Se cargaron ${rawData.length} grupos desde la memoria.`;
           procesarYGeorreferenciar();
           return;
         } catch(e) {}
       }
 
-      // Si no hay datos cargados, intentar leer el archivo CSV local predeterminado
+      // Si no hay datos, buscar el archivo predeterminado si existe en GitHub
       fetch('Informe CFV OCT 8c.csv')
-        .then(response => {
-          if (!response.ok) throw new Error("No hay archivo CSV local");
-          return response.arrayBuffer();
-        })
+        .then(response => response.arrayBuffer())
         .then(buffer => {
           let text = new TextDecoder('windows-1252').decode(buffer);
-          if (!text.includes('CFV-')) text = new TextDecoder('utf-8').decode(buffer);
+          if (!text.toLowerCase().includes('cfv')) text = new TextDecoder('utf-8').decode(buffer);
           rawData = parsearCSV(text);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
-          if (status) status.innerText = `✓ Base cargada exitosamente.`;
-          procesarYGeorreferenciar();
+          if (rawData.length > 0) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
+            if (status) status.innerText = `✓ Se cargó el archivo automáticamente.`;
+            procesarYGeorreferenciar();
+          }
         })
         .catch(err => {
-          if (status) status.innerText = "Por favor adjunte un archivo CSV/Excel de grupos arriba.";
+          if (status) status.innerText = "Por favor seleccione y adjunte su archivo CSV/Excel arriba.";
         });
     }
 
@@ -399,10 +395,10 @@
       reader.onload = function(evt) {
         try {
           let buffer = evt.target.result;
-          let text = new TextDecoder('windows-1252').decode(buffer);
-          if (!text.includes('CFV-')) text = new TextDecoder('utf-8').decode(buffer);
-
+          
           if (file.name.toLowerCase().endsWith('.csv')) {
+            let text = new TextDecoder('windows-1252').decode(buffer);
+            if (!text.toLowerCase().includes('cfv')) text = new TextDecoder('utf-8').decode(buffer);
             rawData = parsearCSV(text);
           } else {
             const data = new Uint8Array(buffer);
@@ -413,29 +409,29 @@
 
           if (rawData && rawData.length > 0) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(rawData));
-            document.getElementById('statusMsg').innerText = `✓ ¡Éxito! Se cargaron ${rawData.length} registros desde "${file.name}".`;
+            document.getElementById('statusMsg').innerText = `✓ ¡Éxito! Se procesaron ${rawData.length} registros desde "${file.name}".`;
             procesarYGeorreferenciar();
           } else {
-            alert('El archivo no contiene registros válidos.');
+            alert('No se pudieron extraer datos del archivo.');
           }
         } catch (err) {
-          alert('Error al leer el archivo. Asegúrese de que es un CSV o Excel válido.');
+          alert('Error al leer el archivo. Verifique el formato.');
         }
       };
       reader.readAsArrayBuffer(file);
     }
 
     function parsearCSV(text) {
-      const lines = text.split(/\r\n|\n/).filter(line => line.trim() !== '');
+      const lines = text.split(/\r\n|\n/).filter(l => l.trim() !== '');
       if (lines.length < 2) return [];
 
       const delim = lines[0].includes(';') ? ';' : ',';
-      const headers = lines[0].split(delim).map(h => h.replace(/^["']|["']$/g, '').trim());
+      const headers = lines[0].split(delim).map(h => normalizarClaveHeader(h));
 
       const result = [];
       for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(delim).map(v => v.replace(/^["']|["']$/g, '').trim());
-        if (values.length >= headers.length) {
+        if (values.length >= 2) {
           const row = {};
           headers.forEach((h, idx) => {
             row[h] = values[idx] || 'Sin Asignar';
@@ -446,31 +442,34 @@
       return result;
     }
 
+    function normalizarClaveHeader(h) {
+      let txt = String(h || '').replace(/^["']|["']$/g, '').trim();
+      return txt;
+    }
+
     function procesarYGeorreferenciar() {
       gruposGeoreferenciados = [];
 
       rawData.forEach((item, index) => {
-        const nom = obtenerValor(item, ['Nombre']);
-        if (!nom.toUpperCase().startsWith('CFV-')) return;
+        const nom = obtenerValorGenerico(item, ['nombre']);
+        if (!nom.toUpperCase().includes('CFV-')) return;
 
-        const dir = obtenerValor(item, ['Dirección', 'Direccion']);
+        const dir = obtenerValorGenerico(item, ['direccion', 'dirección']);
         if (dir.toLowerCase().includes('virtual') || dir.toLowerCase() === 'sin asignar') return;
 
         const coords = geocodificarDireccion(dir, index);
 
-        if (coords) {
-          gruposGeoreferenciados.push({
-            id: index,
-            nombre: nom,
-            tipo: obtenerValor(item, ['Tipo Grupo', 'Tipo']),
-            encargados: obtenerValor(item, ['Encargados', 'Encargado']),
-            dia: obtenerValor(item, ['Día de Reunión', 'Dia de Reunion', 'Día']),
-            hora: obtenerValor(item, ['Hora de Reunión', 'Hora de Reunion', 'Hora']),
-            direccion: dir,
-            lat: coords[0],
-            lng: coords[1]
-          });
-        }
+        gruposGeoreferenciados.push({
+          id: index,
+          nombre: nom,
+          tipo: obtenerValorGenerico(item, ['tipo']),
+          encargados: obtenerValorGenerico(item, ['encargado']),
+          dia: obtenerValorGenerico(item, ['dia', 'día']),
+          hora: obtenerValorGenerico(item, ['hora']),
+          direccion: dir,
+          lat: coords[0],
+          lng: coords[1]
+        });
       });
 
       filtrarYMostrar();
@@ -503,8 +502,8 @@
       }
 
       if (!lat || !lng) {
-        lat = 4.6500;
-        lng = -74.0800;
+        lat = 4.6800;
+        lng = -74.0600;
       }
 
       return [lat, lng];
@@ -513,15 +512,15 @@
     function filtrarYMostrar() {
       markersLayer.clearLayers();
 
-      const searchTxt = normalizar(document.getElementById('searchInput').value);
-      const seleccionados = Array.from(document.querySelectorAll('.chk-tipo:checked')).map(cb => normalizar(cb.value));
+      const searchTxt = normalizarTexto(document.getElementById('searchInput').value);
+      const seleccionados = Array.from(document.querySelectorAll('.chk-tipo:checked')).map(cb => normalizarTexto(cb.value));
 
       const filtrados = gruposGeoreferenciados.filter(g => {
-        const coincideTipo = seleccionados.includes(normalizar(g.tipo));
-        const coincideBusqueda = normalizar(g.nombre).includes(searchTxt) || 
-                                 normalizar(g.encargados).includes(searchTxt) || 
-                                 normalizar(g.direccion).includes(searchTxt);
-        return coincideTipo && coincideBusqueda;
+        const coincideTipo = seleccionados.some(sel => normalizarTexto(g.tipo).includes(sel) || sel.includes(normalizarTexto(g.tipo)));
+        const coincideBusqueda = normalizarTexto(g.nombre).includes(searchTxt) || 
+                                 normalizarTexto(g.encargados).includes(searchTxt) || 
+                                 normalizarTexto(g.direccion).includes(searchTxt);
+        return (seleccionados.length === 0 || coincideTipo) && coincideBusqueda;
       });
 
       document.getElementById('counterBadge').innerText = `${filtrados.length} Grupos en Mapa`;
@@ -531,11 +530,11 @@
       const bounds = [];
 
       filtrados.forEach((g, idx) => {
-        // Dispersión suave para grupos en la misma sede/edificio
-        const jitterLat = (Math.sin(idx * 2) * 0.00025);
-        const jitterLng = (Math.cos(idx * 2) * 0.00025);
-        const posLat = g.lat + jitterLat;
-        const posLng = g.lng + jitterLng;
+        // Dispersión concéntrica para grupos en la misma dirección/sede
+        const angle = idx * 0.8;
+        const radius = (idx % 5) * 0.00015;
+        const posLat = g.lat + (Math.sin(angle) * radius);
+        const posLng = g.lng + (Math.cos(angle) * radius);
 
         const houseIcon = L.divIcon({
           className: 'custom-div-icon',
@@ -545,7 +544,7 @@
           popupAnchor: [0, -18]
         });
 
-        // POPUP SIN TELÉFONOS (ESTRICTA PRIVACIDAD)
+        // POPUP SIN TELÉFONOS (PRIVACIDAD)
         const popupContent = `
           <div class="popup-card">
             <div class="popup-header">
@@ -580,10 +579,10 @@
         `;
       });
 
-      listContainer.innerHTML = listHtml || `<div class="text-center py-4 text-muted small">No hay grupos para mostrar.</div>`;
+      listContainer.innerHTML = listHtml || `<div class="text-center py-4 text-muted small">No se encontraron grupos.</div>`;
 
       if (bounds.length > 0) {
-        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
       }
     }
 
@@ -597,4 +596,48 @@
       });
     }
 
-    function copiarEnlacePublico()
+    function copiarEnlacePublico() {
+      const input = document.getElementById('publicLinkInput');
+      if (!input.value) return;
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        alert('¡Enlace público copiado al portapapeles!');
+      });
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('active');
+    }
+
+    function obtenerValorGenerico(item, posiblesPalabras) {
+      if (!item) return 'Sin Asignar';
+      for (let k of Object.keys(item)) {
+        const kNorm = normalizarTexto(k);
+        for (let p of posiblesPalabras) {
+          if (kNorm.includes(normalizarTexto(p))) {
+            return String(item[k] || 'Sin Asignar').trim();
+          }
+        }
+      }
+      return 'Sin Asignar';
+    }
+
+    function normalizarTexto(txt) {
+      return String(txt || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '');
+    }
+
+    function escapar(txt) {
+      return String(txt || '')
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
