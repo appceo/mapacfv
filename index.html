@@ -31,7 +31,6 @@
       overflow: hidden;
     }
 
-    /* ENCABEZADO */
     .app-header {
       background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
       color: white;
@@ -40,7 +39,6 @@
       z-index: 1000;
     }
 
-    /* CONTENEDOR PRINCIPAL MAPA + SIDEBAR */
     .app-body {
       display: flex;
       flex: 1;
@@ -48,7 +46,6 @@
       overflow: hidden;
     }
 
-    /* PANEL LATERAL */
     #sidebar {
       width: 360px;
       background: white;
@@ -72,14 +69,12 @@
       padding: 0.8rem;
     }
 
-    /* MAPA LEAFLET */
     #map {
       flex: 1;
       height: 100%;
       width: 100%;
     }
 
-    /* TARJETAS EN SIDEBAR */
     .group-item-card {
       border: 1px solid #e2e8f0;
       border-left: 4px solid var(--accent-color);
@@ -97,7 +92,6 @@
       transform: translateX(2px);
     }
 
-    /* ESTILO DE CASITA 🏠 EN EL MAPA */
     .house-pin {
       background-color: #2b6cb0;
       border: 2px solid #ffffff;
@@ -119,7 +113,6 @@
       z-index: 1000 !important;
     }
 
-    /* POPUP DE LA CASITA EN EL MAPA (SIN TELÉFONO) */
     .leaflet-popup-content-wrapper {
       border-radius: 10px;
       padding: 0;
@@ -148,7 +141,6 @@
       color: #4a5568;
     }
 
-    /* BOTÓN COLAPSAR SIDEBAR EN MÓVILES */
     .toggle-sidebar-btn {
       position: absolute;
       top: 15px;
@@ -202,19 +194,16 @@
     </div>
   </header>
 
-  <!-- CONTENIDO PRINCIPAL -->
   <div class="app-body">
 
     <!-- PANEL LATERAL -->
     <div id="sidebar">
       <div class="sidebar-header">
-        <!-- BUSCADOR -->
         <div class="input-group input-group-sm mb-2">
           <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
           <input type="text" id="searchInput" class="form-control" placeholder="Buscar grupo, barrio o encargado..." oninput="filtrarYMostrar()">
         </div>
 
-        <!-- CONTADOR Y FILTROS -->
         <div class="d-flex justify-content-between align-items-center">
           <span id="counterBadge" class="badge bg-primary fs-6">0 Grupos en Mapa</span>
           <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFiltros">
@@ -222,34 +211,25 @@
           </button>
         </div>
 
-        <!-- ACCORDEON FILTROS TIPO DE GRUPO -->
         <div class="collapse mt-2" id="collapseFiltros">
           <div class="card card-body p-2 bg-light small">
             <div class="fw-bold mb-1">Tipos de Grupo:</div>
-            <div class="row g-1" id="filterCheckboxes">
-              <!-- Checkboxes generados dinámicamente -->
-            </div>
+            <div class="row g-1" id="filterCheckboxes"></div>
           </div>
         </div>
       </div>
 
-      <!-- LISTA DE GRUPOS -->
-      <div class="sidebar-content" id="groupList">
-        <!-- Tarjetas dinámicas en el sidebar -->
-      </div>
+      <div class="sidebar-content" id="groupList"></div>
     </div>
 
-    <!-- BOTÓN COLAPSAR SIDEBAR -->
-    <button class="toggle-sidebar-btn no-print" onclick="toggleSidebar()" title="Ocultar/Mostrar Lista">
+    <button class="toggle-sidebar-btn" onclick="toggleSidebar()" title="Ocultar/Mostrar Lista">
       <i class="bi bi-list fs-5"></i>
     </button>
 
-    <!-- MAPA -->
     <div id="map"></div>
 
   </div>
 
-  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
@@ -258,13 +238,11 @@
     let rawData = [];
     let gruposGeoreferenciados = [];
 
-    // TIPOS DE GRUPO SOPORTADOS
     const tiposDisponibles = [
       "CFV Pre-Juvenil", "CFV Juvenil", "CFV Red Pro", "CFV Hombres", 
       "CFV Mujeres", "CFV Parejas", "CFV Integral", "CFV Kids"
     ];
 
-    // DICCIONARIO DE PUNTOS CLAVE Y SEDES
     const puntosSedes = {
       '127': [4.7118, -74.0543],
       'igleco 127': [4.7118, -74.0543],
@@ -296,17 +274,13 @@
     window.onload = function() {
       initMap();
       renderCheckboxes();
-      cargarDatosIniciales();
     };
 
     function initMap() {
-      // Centro inicial en Bogotá
       map = L.map('map').setView([4.6800, -74.0600], 12);
-
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        attribution: '&copy; OpenStreetMap'
       }).addTo(map);
-
       markersLayer = L.layerGroup().addTo(map);
     }
 
@@ -333,37 +307,51 @@
       const reader = new FileReader();
       reader.onload = function(evt) {
         try {
-          const data = new Uint8Array(evt.target.result);
-          const wb = XLSX.read(data, { type: 'array' });
-          const sheet = wb.Sheets[wb.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(sheet, { defval: 'Sin Asignar' });
+          let buffer = evt.target.result;
+          let decoder = new TextDecoder('windows-1252');
+          let text = decoder.decode(buffer);
 
-          if (json && json.length > 0) {
-            rawData = json;
-            procesarYGeorreferenciar();
+          if (file.name.toLowerCase().endsWith('.csv')) {
+            const parsed = parsearCSV(text);
+            if (parsed.length > 0) {
+              rawData = parsed;
+              procesarYGeorreferenciar();
+            } else {
+              alert('El CSV no contiene registros válidos.');
+            }
           } else {
-            alert('El archivo no contiene registros válidos.');
+            const data = new Uint8Array(buffer);
+            const wb = XLSX.read(data, { type: 'array' });
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            rawData = XLSX.utils.sheet_to_json(sheet, { defval: 'Sin Asignar' });
+            procesarYGeorreferenciar();
           }
         } catch (err) {
-          alert('Error al leer el archivo. Asegúrese de que es un CSV o Excel válido.');
+          alert('Error al procesar el archivo.');
         }
       };
       reader.readAsArrayBuffer(file);
     }
 
-    function cargarDatosIniciales() {
-      // Cargar datos predeterminados si no se adjunta archivo de entrada
-      rawData = [
-        {"Nombre":"CFV-H02 Iván Aguirre","Dirección":"SUBA - Prado Veraniego - Igleco 127 - Cra. 49 No. 127D 59 Salón 204","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Encargados":"Ivan Aguirre","Tipo Grupo":"CFV Hombres"},
-        {"Nombre":"CFV-I01 Alfonso Vega","Dirección":"SUBA - Victoria Norte - Calle 150 # 53- 32","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Alfonso Vega , Rosa De Vega","Tipo Grupo":"CFV Integral"},
-        {"Nombre":"CFV-I02 Oscar Ramírez","Dirección":"SUBA - Alhambra - Calle 114 A 47-35","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Oscar Ramírez , Mónica Bernal","Tipo Grupo":"CFV Integral"},
-        {"Nombre":"CFV-I03 Héctor Vargas","Dirección":"USAQUÉN - Cedritos - Calle 140 # 13- 58 Apto 201 Torre 2","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Héctor Vargas , Mónica Del Pilar Arciniegas","Tipo Grupo":"CFV Integral"},
-        {"Nombre":"CFV-I04 Mónica Rodríguez","Dirección":"SUBA - Prado Veraniego - Calle 131 A #49-16 Apto 402","Día de Reunión":"Sábado","Hora de Reunión":"05:00 PM","Encargados":"Mónica Rodríguez","Tipo Grupo":"CFV Integral"},
-        {"Nombre":"CFV-M01 Mónica Arciniegas","Dirección":"USAQUÉN - Cedritos - Calle 140 # 13- 58 Apto 201 Torre 2","Día de Reunión":"Martes","Hora de Reunión":"07:00 PM","Encargados":"Mónica Del Pilar Arciniegas","Tipo Grupo":"CFV Mujeres"},
-        {"Nombre":"CFV-K01 Sandra Reyes","Dirección":"SUBA - Prado Veraniego - Calle 128 B # 46 - 45","Día de Reunión":"Sábado","Hora de Reunión":"10:00 AM","Encargados":"Sandra Reyes","Tipo Grupo":"CFV Kids"},
-        {"Nombre":"CFV-J01 Santiago Sandoval","Dirección":"SUBA - Prado Veraniego - Cra 49 # 127D-59 Salón 201","Día de Reunión":"Sábado","Hora de Reunión":"04:00 PM","Encargados":"Santiago Sandoval","Tipo Grupo":"CFV Juvenil"}
-      ];
-      procesarYGeorreferenciar();
+    function parsearCSV(text) {
+      const lines = text.split(/\r\n|\n/).filter(line => line.trim() !== '');
+      if (lines.length < 2) return [];
+
+      const delim = lines[0].includes(';') ? ';' : ',';
+      const headers = lines[0].split(delim).map(h => h.replace(/^["']|["']$/g, '').trim());
+
+      const result = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(delim).map(v => v.replace(/^["']|["']$/g, '').trim());
+        if (values.length >= headers.length) {
+          const row = {};
+          headers.forEach((h, idx) => {
+            row[h] = values[idx] || 'Sin Asignar';
+          });
+          result.push(row);
+        }
+      }
+      return result;
     }
 
     function procesarYGeorreferenciar() {
@@ -371,7 +359,7 @@
 
       rawData.forEach((item, index) => {
         const nom = obtenerValor(item, ['Nombre']);
-        if (!nom.toUpperCase().startsWith('CFV-')) return; // Solo procesar CFV
+        if (!nom.toUpperCase().startsWith('CFV-')) return;
 
         const dir = obtenerValor(item, ['Dirección', 'Direccion']);
         const coords = geocodificarDireccion(dir, index);
@@ -394,15 +382,12 @@
       filtrarYMostrar();
     }
 
-    // MOTOR DE GEOLOCALIZACIÓN PARA LA CUADRÍCULA DE BOGOTÁ Y ALREDEDORES
     function geocodificarDireccion(dirStr, idx) {
       if (!dirStr || dirStr.trim().toLowerCase() === 'virtual' || dirStr.trim().toLowerCase() === 'sin asignar') {
         return null;
       }
 
       const txt = dirStr.toLowerCase();
-
-      // 1. Extraer Calle y Carrera para cálculo matricial
       const isSur = txt.includes('sur');
       const isEste = txt.includes('este');
 
@@ -418,7 +403,6 @@
         lat = isSur ? 4.5981 - (calle * 0.0008) : 4.5981 + (calle * 0.00088);
         lng = isEste ? -74.0760 + (carrera * 0.0008) : -74.0760 - (carrera * 0.0008);
       } else {
-        // 2. Buscar en Sede o Municipio conocido
         for (let key in puntosSedes) {
           if (txt.includes(key)) {
             lat = puntosSedes[key][0];
@@ -430,10 +414,9 @@
 
       if (!lat || !lng) {
         lat = 4.6500;
-        lng = -74.0800; // Centro por defecto
+        lng = -74.0800;
       }
 
-      // Pequeño desplazamiento aleatorio (jitter) para evitar superposición exacta de casitas
       const jitterLat = (Math.random() - 0.5) * 0.0004;
       const jitterLng = (Math.random() - 0.5) * 0.0004;
 
@@ -454,16 +437,13 @@
         return coincideTipo && coincideBusqueda;
       });
 
-      // Actualizar contador
       document.getElementById('counterBadge').innerText = `${filtrados.length} Grupos en Mapa`;
 
-      // Renderizar casitas en el mapa y lista en sidebar
       const listContainer = document.getElementById('groupList');
       let listHtml = '';
       const bounds = [];
 
       filtrados.forEach(g => {
-        // Icono de casita personalizado
         const houseIcon = L.divIcon({
           className: 'custom-div-icon',
           html: `<div class="house-pin" title="${escapar(g.nombre)}"><i class="bi bi-house-door-fill"></i></div>`,
@@ -472,7 +452,7 @@
           popupAnchor: [0, -18]
         });
 
-        // TARJETA FLOTANTE POPUP (ESTRICTAMENTE SIN TELÉFONO)
+        // TARJETA POPUP DE LA CASITA (EXCLUYE TELÉFONOS)
         const popupContent = `
           <div class="popup-card">
             <div class="popup-header">
@@ -493,7 +473,6 @@
         markersLayer.addLayer(marker);
         bounds.push([g.lat, g.lng]);
 
-        // Elemento en sidebar
         listHtml += `
           <div class="group-item-card" onclick="centrarEnGrupo(${g.lat}, ${g.lng}, ${g.id})">
             <div class="d-flex justify-content-between align-items-center">
@@ -508,9 +487,8 @@
         `;
       });
 
-      listContainer.innerHTML = listHtml || `<div class="text-center py-4 text-muted small">No se encontraron grupos.</div>`;
+      listContainer.innerHTML = listHtml || `<div class="text-center py-4 text-muted small">Cargue su archivo CSV para visualizar las casitas en el mapa.</div>`;
 
-      // Ajustar vista del mapa a los marcadores activos
       if (bounds.length > 0) {
         map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
       }
@@ -518,8 +496,6 @@
 
     function centrarEnGrupo(lat, lng, id) {
       map.flyTo([lat, lng], 16, { duration: 1.2 });
-
-      // Abrir el popup de la casita correspondiente
       markersLayer.eachLayer(layer => {
         const pos = layer.getLatLng();
         if (Math.abs(pos.lat - lat) < 0.00001 && Math.abs(pos.lng - lng) < 0.00001) {
