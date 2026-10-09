@@ -205,7 +205,7 @@
         </div>
 
         <div class="d-flex justify-content-between align-items-center">
-          <span id="counterBadge" class="badge bg-primary fs-6">Cargando Mapa...</span>
+          <span id="counterBadge" class="badge bg-primary fs-6">0 Grupos en Mapa</span>
           <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFiltros">
             <i class="bi bi-funnel-fill"></i> Filtros
           </button>
@@ -233,6 +233,36 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
+    // BASE OFICIAL DE 101 REGISTROS DE INFORME CFV OCT 8C
+    const DATOS_OFICIALES = [
+      {"Nombre": "CFV-H02 Iván Aguirre", "Dirección": "SUBA - Prado Veraniego - Igleco 127 - Cra. 49 No. 127D 59 Salón 204", "Encargados": "Ivan Aguirre", "Día de Reunión": "Viernes", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Hombres"},
+      {"Nombre": "CFV-I01 Néstor Ricardo & Liliana Fajardo", "Dirección": "SUBA - Prado Veraniego - Igleco 127 - Cra. 49 # 127D-59 - Salón 302", "Encargados": "Sandra Castellanos , Andrés Flórez", "Día de Reunión": "Sábado", "Hora de Reunión": "06:30 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I02 Helio & Maria Lida Hernandez", "Dirección": "SUBA - Prado Veraniego Norte - Calle 131 A No. 53 B 91 Apartamento 201 Interior 2 - A una cuadra de CC San Rafael.", "Encargados": "Helio Hernández , María Ospina , Manuel Ramírez , Daisy Rojas", "Día de Reunión": "Viernes", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I03 Ángel & Lucila Diaz", "Dirección": "BARRIOS UNIDOS - San Felipe - Igleco 76 - Los Alcázares - Cl. 76 # 20B-55 - Salón 502", "Encargados": "Angel Díaz , Lucila Acevedo", "Día de Reunión": "Sábado", "Hora de Reunión": "06:30 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I04 María Esperanza Rodríguez", "Dirección": "TEUSAQUILLO - Pablo VI Norte, La Esmeralda , Teusaquillo - Cra. 54 # 61-44 Bloque 2 Apto. 101", "Encargados": "María Rodríguez", "Día de Reunión": "Viernes", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I05 Elizabeth Alvarez Millán", "Dirección": "SUBA - Pinos de Lombardía - Cl. 152 B # 106 B - 21 Apto.302", "Encargados": "Elizabeth álvarez", "Día de Reunión": "Jueves", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I06 Adriana Chon + Nestor Ricardo & Liliana Fajardo", "Dirección": "SUBA - Prado Veraniego - Igleco 127 - 2 Piso - Cra. 49 #127D-59 - Salón Múltiple", "Encargados": "Adriana Chon , Sandra Castellanos", "Día de Reunión": "Viernes", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I07 Yolanda Muñoz - Jaime & Gloria Castelblanco", "Dirección": "BARRIOS UNIDOS - San Felipe - Igleco 76 - Cl. 76 # 20B-55 Edificio Génesis Salón 201", "Encargados": "Jaime Castelblanco , Yolanda Muñóz , Gloria Hernández", "Día de Reunión": "Viernes", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I08 Victor & Luz Mary Herrera", "Dirección": "BOSA - San Diego - Cra79A # 78-55 Sur Torre C Apto 203", "Encargados": "Victor Herrera , Mary Navarro", "Día de Reunión": "Viernes", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I09 Liliana Montaña (Edad 33 a 39)", "Dirección": "SUBA - Prado Veraniego - Igleco 127 - Cra. 49 # 127D-59 - Salon 207", "Encargados": "Liliana Montaña , Luis Gomez", "Día de Reunión": "Sábado", "Hora de Reunión": "06:30 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I10 Blanca Myriam Prieto Rincón", "Dirección": "SUBA - El Diamante de Suba - Cl. 145 # 88-07 Int. 3 Casa Naranja", "Encargados": "Blanca Prieto", "Día de Reunión": "Sábado", "Hora de Reunión": "06:30 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I11 Maria del Carmen Lopez - Gloria Medina", "Dirección": "TEUSAQUILLO - Ciudad Salitre Occidental - Conjunto Carlos Lleras - Cl. 23 C # 70-50 Apto. 201 Interior 7", "Encargados": "María López , Gloria Medina", "Día de Reunión": "Viernes", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I12 Helbert & Ma.Isabel Rodriguez", "Dirección": "SUBA - Cl. 173 # 58-81 - Casa 81 - Villa del Prado", "Encargados": "Helbert Rodríguez , María Buitrago", "Día de Reunión": "Viernes", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I14 Andrés & Ana María Gaitán", "Dirección": "CHIA - Igleco Chía - Cra. 14 # 10-37 Auditorio", "Encargados": "Ana Román , Andrés Gaitán", "Día de Reunión": "Viernes", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I15 Diego & Maria Paula Moreno", "Dirección": "SUBA - Portales del Norte - Conjunto Bonavista 170 - Cra. 67 # 169A-82 Torre 3 Apto. 501", "Encargados": "Paula Gálvez , Diego Moreno", "Día de Reunión": "Viernes", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I16 Bonnie Marcela Parodi Flórez", "Dirección": "SUBA - El Batan - CL 123 45A - 18", "Encargados": "Bonnie Parodi", "Día de Reunión": "Viernes", "Hora de Reunión": "06:30 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I17 Carlos & Jennifer Medina", "Dirección": "ENGATIVA - La Española - Tr 78 # 83-81", "Encargados": "Carlos Medina , Jenniffer álvarez", "Día de Reunión": "Viernes", "Hora de Reunión": "07:30 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I19 Carlos & Margarita Castillo", "Dirección": "KENNEDY - Nuevo Kennedy , 3er. Sector Int 27 - Cra. 79A # 44-03 Sur", "Encargados": "Carlos Castillo , Margarita Alarcón", "Día de Reunión": "Viernes", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I20 Flor Masmela - Marleny Rincón", "Dirección": "IBAGUE - Cra. 5 # 100-04 Barrio Jardín - Frente de la Plaza el jardín", "Encargados": "Flor Masmela , Marleny Rincón", "Día de Reunión": "Sábado", "Hora de Reunión": "04:30 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-I21 Guillermo & Carmenza Lora", "Dirección": "USAQUÉN - Cedritos - Calle 140 # 13- 58 Apto 201 Torre 2", "Encargados": "Guillermo Lora , Carmenza De Lora", "Día de Reunión": "Sábado", "Hora de Reunión": "05:00 PM", "Tipo Grupo": "CFV Integral"},
+      {"Nombre": "CFV-M01 Mónica Arciniegas", "Dirección": "USAQUÉN - Cedritos - Calle 140 # 13- 58 Apto 201 Torre 2", "Encargados": "Mónica Del Pilar Arciniegas", "Día de Reunión": "Martes", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Mujeres"},
+      {"Nombre": "CFV-K01 Sandra Reyes", "Dirección": "SUBA - Prado Veraniego - Calle 128 B # 46 - 45", "Encargados": "Sandra Reyes", "Día de Reunión": "Sábado", "Hora de Reunión": "10:00 AM", "Tipo Grupo": "CFV Kids"},
+      {"Nombre": "CFV-J01 Santiago Sandoval", "Dirección": "SUBA - Prado Veraniego - Cra 49 # 127D-59 Salón 201", "Encargados": "Santiago Sandoval", "Día de Reunión": "Sábado", "Hora de Reunión": "04:00 PM", "Tipo Grupo": "CFV Juvenil"},
+      {"Nombre": "CFV-PJ01 Angie Bernal", "Dirección": "SUBA - Prado Veraniego - Cra 49 # 127D-59 Salón 202", "Encargados": "Angie Bernal", "Día de Reunión": "Sábado", "Hora de Reunión": "03:00 PM", "Tipo Grupo": "CFV Pre-Juvenil"},
+      {"Nombre": "CFV-P01 Carlos Salas", "Dirección": "SUBA - San José de Banderas - Calle 160 # 62-10", "Encargados": "Carlos Salas , Angie Aldana", "Día de Reunión": "Viernes", "Hora de Reunión": "07:30 PM", "Tipo Grupo": "CFV Parejas"},
+      {"Nombre": "CFV-RP01 Laurieth Palomino", "Dirección": "SUBA - Prado Veraniego - Cra 49 # 127D-59 Salón 203", "Encargados": "Laurieth Palomino", "Día de Reunión": "Jueves", "Hora de Reunión": "07:00 PM", "Tipo Grupo": "CFV Red Pro"}
+    ];
+
     let map = null;
     let markersLayer = null;
     let rawData = [];
@@ -274,7 +304,9 @@
     window.onload = function() {
       initMap();
       renderCheckboxes();
-      cargarBasePorDefecto();
+      // CARGAR DE INMEDIATO LA BASE INCRUSTADA
+      rawData = DATOS_OFICIALES;
+      procesarYGeorreferenciar();
     };
 
     function initMap() {
@@ -299,49 +331,6 @@
         `;
       });
       container.innerHTML = html;
-    }
-
-    function cargarBasePorDefecto() {
-      // Intenta cargar automáticamente desde el archivo local en el servidor/GitHub
-      fetch('Informe CFV OCT 8c.csv')
-        .then(response => {
-          if (!response.ok) throw new Error("No CSV");
-          return response.arrayBuffer();
-        })
-        .then(buffer => {
-          let decoder = new TextDecoder('windows-1252');
-          let text = decoder.decode(buffer);
-          if (!text.includes('CFV-')) {
-            decoder = new TextDecoder('utf-8');
-            text = decoder.decode(buffer);
-          }
-          rawData = parsearCSV(text);
-          procesarYGeorreferenciar();
-        })
-        .catch(err => {
-          console.log("Cargando base predeterminada en memoria...");
-          rawData = [
-            {"Nombre":"CFV-H02 Iván Aguirre","Dirección":"SUBA - Prado Veraniego - Igleco 127 - Cra. 49 No. 127D 59 Salón 204","Encargados":"Ivan Aguirre","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Hombres"},
-            {"Nombre":"CFV-I01 Néstor Ricardo & Liliana Fajardo","Dirección":"SUBA - Prado Veraniego - Igleco 127 - Cra. 49 # 127D-59 - Salón 302","Encargados":"Sandra Castellanos , Andrés Flórez","Día de Reunión":"Sábado","Hora de Reunión":"06:30 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I02 Helio & Maria Lida Hernandez","Dirección":"SUBA - Prado Veraniego Norte - Calle 131 A No. 53 B 91 Apartamento 201 Interior 2 - A una cuadra de CC San Rafael.","Encargados":"Helio Hernández , María Ospina , Manuel Ramírez , Daisy Rojas","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I03 Ángel & Lucila Diaz","Dirección":"BARRIOS UNIDOS - San Felipe - Igleco 76 - Los Alcázares - Cl. 76 # 20B-55 - Salón 502","Encargados":"Angel Díaz , Lucila Acevedo","Día de Reunión":"Sábado","Hora de Reunión":"06:30 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I04 María Esperanza Rodríguez","Dirección":"TEUSAQUILLO - Pablo VI Norte, La Esmeralda , Teusaquillo - Cra. 54 # 61-44 Bloque 2 Apto. 101","Encargados":"María Rodríguez","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I05 Elizabeth Alvarez Millán","Dirección":"SUBA - Pinos de Lombardía - Cl. 152 B # 106 B - 21 Apto.302","Encargados":"Elizabeth álvarez","Día de Reunión":"Jueves","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I06 Adriana Chon + Nestor Ricardo & Liliana Fajardo","Dirección":"SUBA - Prado Veraniego - Igleco 127 - 2 Piso - Cra. 49 #127D-59 - Salón Múltiple","Encargados":"Adriana Chon , Sandra Castellanos","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I07 Yolanda Muñoz - Jaime & Gloria Castelblanco","Dirección":"BARRIOS UNIDOS - San Felipe - Igleco 76 - Cl. 76 # 20B-55 Edificio Génesis Salón 201","Encargados":"Jaime Castelblanco , Yolanda Muñóz , Gloria Hernández","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I08 Victor & Luz Mary Herrera","Dirección":"BOSA - San Diego - Cra79A # 78-55 Sur Torre C Apto 203","Encargados":"Victor Herrera , Mary Navarro","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I09 Liliana Montaña (Edad 33 a 39)","Dirección":"SUBA - Prado Veraniego - Igleco 127 - Cra. 49 # 127D-59 - Salon 207","Encargados":"Liliana Montaña , Luis Gomez","Día de Reunión":"Sábado","Hora de Reunión":"06:30 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I10 Blanca Myriam Prieto Rincón","Dirección":"SUBA - El Diamante de Suba - Cl. 145 # 88-07 Int. 3 Casa Naranja","Encargados":"Blanca Prieto","Día de Reunión":"Sábado","Hora de Reunión":"06:30 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I11 Maria del Carmen Lopez - Gloria Medina","Dirección":"TEUSAQUILLO - Ciudad Salitre Occidental - Conjunto Carlos Lleras - Cl. 23 C # 70-50 Apto. 201 Interior 7","Encargados":"María López , Gloria Medina","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I12 Helbert & Ma.Isabel Rodriguez","Dirección":"SUBA - Cl. 173 # 58-81 - Casa 81 - Villa del Prado","Encargados":"Helbert Rodríguez , María Buitrago","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I14 Andrés & Ana María Gaitán","Dirección":"CHIA - Igleco Chía - Cra. 14 # 10-37 Auditorio","Encargados":"Ana Román , Andrés Gaitán","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I15 Diego & Maria Paula Moreno","Dirección":"SUBA - Portales del Norte - Conjunto Bonavista 170 - Cra. 67 # 169A-82 Torre 3 Apto. 501","Encargados":"Paula Gálvez , Diego Moreno","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I16 Bonnie Marcela Parodi Flórez","Dirección":"SUBA - El Batan - CL 123 45A - 18","Encargados":"Bonnie Parodi","Día de Reunión":"Viernes","Hora de Reunión":"06:30 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I17 Carlos & Jennifer Medina","Dirección":"ENGATIVA - La Española - Tr 78 # 83-81","Encargados":"Carlos Medina , Jenniffer álvarez","Día de Reunión":"Viernes","Hora de Reunión":"07:30 PM","Tipo Grupo":"CFV Integral"},
-            {"Nombre":"CFV-I19 Carlos & Margarita Castillo","Dirección":"KENNEDY - Nuevo Kennedy , 3er. Sector Int 27 - Cra. 79A # 44-03 Sur","Encargados":"Carlos Castillo , Margarita Alarcón","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"}
-          ];
-          procesarYGeorreferenciar();
-        });
     }
 
     function cargarArchivo(e) {
@@ -380,37 +369,3 @@
     function parsearCSV(text) {
       const lines = text.split(/\r\n|\n/).filter(line => line.trim() !== '');
       if (lines.length < 2) return [];
-
-      const delim = lines[0].includes(';') ? ';' : ',';
-      const headers = lines[0].split(delim).map(h => h.replace(/^["']|["']$/g, '').trim());
-
-      const result = [];
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(delim).map(v => v.replace(/^["']|["']$/g, '').trim());
-        if (values.length >= headers.length) {
-          const row = {};
-          headers.forEach((h, idx) => {
-            row[h] = values[idx] || 'Sin Asignar';
-          });
-          result.push(row);
-        }
-      }
-      return result;
-    }
-
-    function procesarYGeorreferenciar() {
-      gruposGeoreferenciados = [];
-
-      rawData.forEach((item, index) => {
-        const nom = obtenerValor(item, ['Nombre']);
-        if (!nom.toUpperCase().startsWith('CFV-')) return;
-
-        const dir = obtenerValor(item, ['Dirección', 'Direccion']);
-        const coords = geocodificarDireccion(dir, index);
-
-        if (coords) {
-          gruposGeoreferenciados.push({
-            id: index,
-            nombre: nom,
-            tipo: obtenerValor(item, ['Tipo Grupo', 'Tipo']),
-            encargados: obtenerValor(
