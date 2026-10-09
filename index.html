@@ -9,7 +9,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <!-- Leaflet CSS (Mapa Interactivo) -->
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <!-- SheetJS para lectura de CSV / Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -188,7 +188,7 @@
     </div>
     <div class="d-flex gap-2">
       <label class="btn btn-sm btn-light fw-bold text-primary mb-0 cursor-pointer">
-        <i class="bi bi-upload me-1"></i> Cargar Archivo CSV/Excel
+        <i class="bi bi-upload me-1"></i> Actualizar CSV/Excel
         <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" class="d-none" onchange="cargarArchivo(event)">
       </label>
     </div>
@@ -205,7 +205,7 @@
         </div>
 
         <div class="d-flex justify-content-between align-items-center">
-          <span id="counterBadge" class="badge bg-primary fs-6">0 Grupos en Mapa</span>
+          <span id="counterBadge" class="badge bg-primary fs-6">Cargando Mapa...</span>
           <button class="btn btn-sm btn-link p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFiltros">
             <i class="bi bi-funnel-fill"></i> Filtros
           </button>
@@ -274,6 +274,7 @@
     window.onload = function() {
       initMap();
       renderCheckboxes();
+      cargarBasePorDefecto();
     };
 
     function initMap() {
@@ -298,6 +299,49 @@
         `;
       });
       container.innerHTML = html;
+    }
+
+    function cargarBasePorDefecto() {
+      // Intenta cargar automáticamente desde el archivo local en el servidor/GitHub
+      fetch('Informe CFV OCT 8c.csv')
+        .then(response => {
+          if (!response.ok) throw new Error("No CSV");
+          return response.arrayBuffer();
+        })
+        .then(buffer => {
+          let decoder = new TextDecoder('windows-1252');
+          let text = decoder.decode(buffer);
+          if (!text.includes('CFV-')) {
+            decoder = new TextDecoder('utf-8');
+            text = decoder.decode(buffer);
+          }
+          rawData = parsearCSV(text);
+          procesarYGeorreferenciar();
+        })
+        .catch(err => {
+          console.log("Cargando base predeterminada en memoria...");
+          rawData = [
+            {"Nombre":"CFV-H02 Iván Aguirre","Dirección":"SUBA - Prado Veraniego - Igleco 127 - Cra. 49 No. 127D 59 Salón 204","Encargados":"Ivan Aguirre","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Hombres"},
+            {"Nombre":"CFV-I01 Néstor Ricardo & Liliana Fajardo","Dirección":"SUBA - Prado Veraniego - Igleco 127 - Cra. 49 # 127D-59 - Salón 302","Encargados":"Sandra Castellanos , Andrés Flórez","Día de Reunión":"Sábado","Hora de Reunión":"06:30 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I02 Helio & Maria Lida Hernandez","Dirección":"SUBA - Prado Veraniego Norte - Calle 131 A No. 53 B 91 Apartamento 201 Interior 2 - A una cuadra de CC San Rafael.","Encargados":"Helio Hernández , María Ospina , Manuel Ramírez , Daisy Rojas","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I03 Ángel & Lucila Diaz","Dirección":"BARRIOS UNIDOS - San Felipe - Igleco 76 - Los Alcázares - Cl. 76 # 20B-55 - Salón 502","Encargados":"Angel Díaz , Lucila Acevedo","Día de Reunión":"Sábado","Hora de Reunión":"06:30 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I04 María Esperanza Rodríguez","Dirección":"TEUSAQUILLO - Pablo VI Norte, La Esmeralda , Teusaquillo - Cra. 54 # 61-44 Bloque 2 Apto. 101","Encargados":"María Rodríguez","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I05 Elizabeth Alvarez Millán","Dirección":"SUBA - Pinos de Lombardía - Cl. 152 B # 106 B - 21 Apto.302","Encargados":"Elizabeth álvarez","Día de Reunión":"Jueves","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I06 Adriana Chon + Nestor Ricardo & Liliana Fajardo","Dirección":"SUBA - Prado Veraniego - Igleco 127 - 2 Piso - Cra. 49 #127D-59 - Salón Múltiple","Encargados":"Adriana Chon , Sandra Castellanos","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I07 Yolanda Muñoz - Jaime & Gloria Castelblanco","Dirección":"BARRIOS UNIDOS - San Felipe - Igleco 76 - Cl. 76 # 20B-55 Edificio Génesis Salón 201","Encargados":"Jaime Castelblanco , Yolanda Muñóz , Gloria Hernández","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I08 Victor & Luz Mary Herrera","Dirección":"BOSA - San Diego - Cra79A # 78-55 Sur Torre C Apto 203","Encargados":"Victor Herrera , Mary Navarro","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I09 Liliana Montaña (Edad 33 a 39)","Dirección":"SUBA - Prado Veraniego - Igleco 127 - Cra. 49 # 127D-59 - Salon 207","Encargados":"Liliana Montaña , Luis Gomez","Día de Reunión":"Sábado","Hora de Reunión":"06:30 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I10 Blanca Myriam Prieto Rincón","Dirección":"SUBA - El Diamante de Suba - Cl. 145 # 88-07 Int. 3 Casa Naranja","Encargados":"Blanca Prieto","Día de Reunión":"Sábado","Hora de Reunión":"06:30 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I11 Maria del Carmen Lopez - Gloria Medina","Dirección":"TEUSAQUILLO - Ciudad Salitre Occidental - Conjunto Carlos Lleras - Cl. 23 C # 70-50 Apto. 201 Interior 7","Encargados":"María López , Gloria Medina","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I12 Helbert & Ma.Isabel Rodriguez","Dirección":"SUBA - Cl. 173 # 58-81 - Casa 81 - Villa del Prado","Encargados":"Helbert Rodríguez , María Buitrago","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I14 Andrés & Ana María Gaitán","Dirección":"CHIA - Igleco Chía - Cra. 14 # 10-37 Auditorio","Encargados":"Ana Román , Andrés Gaitán","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I15 Diego & Maria Paula Moreno","Dirección":"SUBA - Portales del Norte - Conjunto Bonavista 170 - Cra. 67 # 169A-82 Torre 3 Apto. 501","Encargados":"Paula Gálvez , Diego Moreno","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I16 Bonnie Marcela Parodi Flórez","Dirección":"SUBA - El Batan - CL 123 45A - 18","Encargados":"Bonnie Parodi","Día de Reunión":"Viernes","Hora de Reunión":"06:30 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I17 Carlos & Jennifer Medina","Dirección":"ENGATIVA - La Española - Tr 78 # 83-81","Encargados":"Carlos Medina , Jenniffer álvarez","Día de Reunión":"Viernes","Hora de Reunión":"07:30 PM","Tipo Grupo":"CFV Integral"},
+            {"Nombre":"CFV-I19 Carlos & Margarita Castillo","Dirección":"KENNEDY - Nuevo Kennedy , 3er. Sector Int 27 - Cra. 79A # 44-03 Sur","Encargados":"Carlos Castillo , Margarita Alarcón","Día de Reunión":"Viernes","Hora de Reunión":"07:00 PM","Tipo Grupo":"CFV Integral"}
+          ];
+          procesarYGeorreferenciar();
+        });
     }
 
     function cargarArchivo(e) {
@@ -369,174 +413,4 @@
             id: index,
             nombre: nom,
             tipo: obtenerValor(item, ['Tipo Grupo', 'Tipo']),
-            encargados: obtenerValor(item, ['Encargados', 'Encargado']),
-            dia: obtenerValor(item, ['Día de Reunión', 'Dia de Reunion', 'Día']),
-            hora: obtenerValor(item, ['Hora de Reunión', 'Hora de Reunion', 'Hora']),
-            direccion: dir,
-            lat: coords[0],
-            lng: coords[1]
-          });
-        }
-      });
-
-      filtrarYMostrar();
-    }
-
-    function geocodificarDireccion(dirStr, idx) {
-      if (!dirStr || dirStr.trim().toLowerCase() === 'virtual' || dirStr.trim().toLowerCase() === 'sin asignar') {
-        return null;
-      }
-
-      const txt = dirStr.toLowerCase();
-      const isSur = txt.includes('sur');
-      const isEste = txt.includes('este');
-
-      const clMatch = txt.match(/(?:calle|cl\.?|dg\.?|diagonal)\s*(\d+)/i);
-      const crMatch = txt.match(/(?:carrera|cra\.?|cr\.?|kr\.?|tv\.?|transversal|av\.?|avenida)\s*(\d+)/i);
-
-      let lat, lng;
-
-      if (clMatch && crMatch) {
-        const calle = parseInt(clMatch[1]);
-        const carrera = parseInt(crMatch[1]);
-
-        lat = isSur ? 4.5981 - (calle * 0.0008) : 4.5981 + (calle * 0.00088);
-        lng = isEste ? -74.0760 + (carrera * 0.0008) : -74.0760 - (carrera * 0.0008);
-      } else {
-        for (let key in puntosSedes) {
-          if (txt.includes(key)) {
-            lat = puntosSedes[key][0];
-            lng = puntosSedes[key][1];
-            break;
-          }
-        }
-      }
-
-      if (!lat || !lng) {
-        lat = 4.6500;
-        lng = -74.0800;
-      }
-
-      const jitterLat = (Math.random() - 0.5) * 0.0004;
-      const jitterLng = (Math.random() - 0.5) * 0.0004;
-
-      return [lat + jitterLat, lng + jitterLng];
-    }
-
-    function filtrarYMostrar() {
-      markersLayer.clearLayers();
-
-      const searchTxt = normalizar(document.getElementById('searchInput').value);
-      const seleccionados = Array.from(document.querySelectorAll('.chk-tipo:checked')).map(cb => normalizar(cb.value));
-
-      const filtrados = gruposGeoreferenciados.filter(g => {
-        const coincideTipo = seleccionados.includes(normalizar(g.tipo));
-        const coincideBusqueda = normalizar(g.nombre).includes(searchTxt) || 
-                                 normalizar(g.encargados).includes(searchTxt) || 
-                                 normalizar(g.direccion).includes(searchTxt);
-        return coincideTipo && coincideBusqueda;
-      });
-
-      document.getElementById('counterBadge').innerText = `${filtrados.length} Grupos en Mapa`;
-
-      const listContainer = document.getElementById('groupList');
-      let listHtml = '';
-      const bounds = [];
-
-      filtrados.forEach(g => {
-        const houseIcon = L.divIcon({
-          className: 'custom-div-icon',
-          html: `<div class="house-pin" title="${escapar(g.nombre)}"><i class="bi bi-house-door-fill"></i></div>`,
-          iconSize: [36, 36],
-          iconAnchor: [18, 18],
-          popupAnchor: [0, -18]
-        });
-
-        // TARJETA POPUP DE LA CASITA (EXCLUYE TELÉFONOS)
-        const popupContent = `
-          <div class="popup-card">
-            <div class="popup-header">
-              <h6 class="fw-bold mb-0">${escapar(g.nombre)}</h6>
-              <span class="badge bg-warning text-dark mt-1">${escapar(g.tipo)}</span>
-            </div>
-            <div class="popup-body">
-              <p class="mb-1"><span class="popup-label"><i class="bi bi-person-fill text-primary me-1"></i>Encargados:</span> ${escapar(g.encargados)}</p>
-              <p class="mb-1"><span class="popup-label"><i class="bi bi-calendar3 text-success me-1"></i>Reunión:</span> ${escapar(g.dia)} - ${escapar(g.hora)}</p>
-              <p class="mb-0"><span class="popup-label"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Dirección:</span> ${escapar(g.direccion)}</p>
-            </div>
-          </div>
-        `;
-
-        const marker = L.marker([g.lat, g.lng], { icon: houseIcon })
-                        .bindPopup(popupContent);
-
-        markersLayer.addLayer(marker);
-        bounds.push([g.lat, g.lng]);
-
-        listHtml += `
-          <div class="group-item-card" onclick="centrarEnGrupo(${g.lat}, ${g.lng}, ${g.id})">
-            <div class="d-flex justify-content-between align-items-center">
-              <strong class="text-primary small">${escapar(g.nombre)}</strong>
-              <span class="badge bg-secondary style="font-size:0.7rem">${escapar(g.tipo)}</span>
-            </div>
-            <div class="text-muted small mt-1">
-              <i class="bi bi-person me-1"></i>${escapar(g.encargados)}<br>
-              <i class="bi bi-geo-alt me-1 text-danger"></i>${escapar(g.direccion)}
-            </div>
-          </div>
-        `;
-      });
-
-      listContainer.innerHTML = listHtml || `<div class="text-center py-4 text-muted small">Cargue su archivo CSV para visualizar las casitas en el mapa.</div>`;
-
-      if (bounds.length > 0) {
-        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
-      }
-    }
-
-    function centrarEnGrupo(lat, lng, id) {
-      map.flyTo([lat, lng], 16, { duration: 1.2 });
-      markersLayer.eachLayer(layer => {
-        const pos = layer.getLatLng();
-        if (Math.abs(pos.lat - lat) < 0.00001 && Math.abs(pos.lng - lng) < 0.00001) {
-          layer.openPopup();
-        }
-      });
-    }
-
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('active');
-    }
-
-    function obtenerValor(item, posiblesClaves) {
-      if (!item) return 'Sin Asignar';
-      for (let k of Object.keys(item)) {
-        const kLimpia = normalizar(k);
-        for (let p of posiblesClaves) {
-          if (kLimpia.includes(normalizar(p))) {
-            return item[k];
-          }
-        }
-      }
-      return 'Sin Asignar';
-    }
-
-    function normalizar(txt) {
-      return String(txt || '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]/g, '');
-    }
-
-    function escapar(txt) {
-      return String(txt || '')
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-  </script>
-</body>
-</html>
+            encargados: obtenerValor(
